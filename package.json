@@ -2,7 +2,7 @@
   "name": "vireo-engine",
   "version": "0.0.1",
   "description": "Vireo is an HL7 engine simulator to generate random and configurable data for testing purposes. All data generated is simulated and faked.",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,9 +16,6 @@
     "test",
     "fake"
   ],
-  "author": "Matthew King <mattking73@gmail.com>",
-  "license": "UNLICENSED",
-  "private": true,
   "devDependencies": {
     "eslint-config-iwt": "github:iwtsolutions/eslint-config-iwt",
     "grunt": "^1.0.1",
@@ -26,5 +23,17 @@
     "grunt-mocha-test": "^0.12.7",
     "mocha": "^2.5.3",
     "should": "^9.0.2"
-  }
+  },
+  "dependencies": {
+    "faker": "^3.1.0",
+    "hl7-builder": "^0.4.2"
+  },
+  "author": "Matthew King <mattking73@gmail.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "repository" :
+    { 
+        "type" : "git",
+        "url" : "https://github.com/npm/npm.git"
+    }
 }
