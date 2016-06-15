@@ -17,5 +17,14 @@
     "fake"
   ],
   "author": "Matthew King <mattking73@gmail.com>",
-  "license": "ISC"
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "eslint-config-iwt": "github:iwtsolutions/eslint-config-iwt",
+    "grunt": "^1.0.1",
+    "grunt-eslint": "^18.1.0",
+    "grunt-mocha-test": "^0.12.7",
+    "mocha": "^2.5.3",
+    "should": "^9.0.2"
+  }
 }
