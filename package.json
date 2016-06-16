@@ -26,14 +26,16 @@
   },
   "dependencies": {
     "faker": "^3.1.0",
-    "hl7-builder": "^0.4.2"
+    "hl7-builder": "^0.4.2",
+    "pluralize": "^2.0.0",
+    "rethinkdb": "^2.3.2",
+    "underscore": "^1.8.3"
   },
   "author": "Matthew King <mattking73@gmail.com>",
   "license": "UNLICENSED",
   "private": true,
-  "repository" :
-    { 
-        "type" : "git",
-        "url" : "https://github.com/npm/npm.git"
-    }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/npm/npm.git"
+  }
 }
