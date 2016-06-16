@@ -1,0 +1,6 @@
+{
+    "extends": "iwt",
+    "rules": {
+        "no-invalid-this": "off"
+    }
+}
