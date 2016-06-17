@@ -20,6 +20,7 @@ module.exports = function () {
                 results[0].should.have.property('type', 'A01');
                 results[0].should.have.property('hl7', 'MSH|...');
                 results[0].should.have.property('timestamp');
+                results[0].should.have.property('id');
                 done();
             });
         });
@@ -64,18 +65,26 @@ module.exports = function () {
                         return done(updateError);
                     }
 
-                    self.driver.models.patients.findOne({ mrn: '456' }, function (findUpdatedError, updatedResult) {
+                    self.driver.models.patients.find({ mrn: '456' }, function (findUpdatedError, updatedResults) {
                         if (findUpdatedError) {
                             return done(findUpdatedError);
                         }
-                        updatedResult.should.have.property('mrn', '456');
-                        updatedResult.should.have.property('name');
-                        updatedResult.name.should.have.property('family', 'Carter');
-                        updatedResult.name.should.have.property('given', 'Jimmy');
+                        updatedResults.length.should.equal(1);
+                        updatedResults[0].should.have.property('mrn', '456');
+                        updatedResults[0].should.have.property('name');
+                        updatedResults[0].name.should.have.property('family', 'Carter');
+                        updatedResults[0].name.should.have.property('given', 'Jimmy');
                         done();
                     });
                 });
             });
+        });
+    });
+
+    it('should validate mrn exists before saving a patient', function (done) {
+        this.driver.models.patients.save({ }, function (saveError) {
+            should.exist(saveError);
+            done();
         });
     });
 };
