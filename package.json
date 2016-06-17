@@ -17,6 +17,7 @@
     "fake"
   ],
   "devDependencies": {
+    "L7": "^0.2.2",
     "eslint-config-iwt": "github:iwtsolutions/eslint-config-iwt",
     "grunt": "^1.0.1",
     "grunt-eslint": "^18.1.0",
