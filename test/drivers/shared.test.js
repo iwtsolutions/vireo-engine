@@ -97,4 +97,32 @@ module.exports = function () {
             done();
         });
     });
+
+    it('should return models instead of anonymous objects with find', function (done) {
+        let data = { mrn: '1' };
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
+            should.not.exist(saveError);
+            self.driver.models.patient.find({ mrn: '1' }, function (findError, results) {
+                should.not.exist(findError);
+                results.forEach(function (r) {
+                    r.should.be.instanceof(self.driver.models.patient);
+                });
+                done();
+            });
+        });
+    });
+
+    it('should return models instead of anonymous objects with findOne', function (done) {
+        let data = { mrn: '1' };
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
+            should.not.exist(saveError);
+            self.driver.models.patient.findOne({ mrn: '1' }, function (findError, result) {
+                should.not.exist(findError);
+                result.should.be.instanceof(self.driver.models.patient);
+                done();
+            });
+        });
+    });
 };
