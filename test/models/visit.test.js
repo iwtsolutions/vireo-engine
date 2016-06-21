@@ -147,27 +147,11 @@ describe('visit', function () {
         v.admitDate.should.equal(date.toFullString(new Date('02/02/2016')));
     });
 
-    it('should default dischargeDate to now', function () {
-        let v = new visit();
-        should.not.exist(v.admitDate);
-        v.setAdmitDate();
-        let now = date.toFullString(new Date()).substring(0, 8);
-        v.admitDate.should.containEql(now);
-    });
-
     it('should set dischargeDate', function () {
         let v = new visit();
         should.not.exist(v.dischargeDate);
         v.setDischargeDate(new Date('03/03/2016'));
         v.dischargeDate.should.equal(date.toFullString(new Date('03/03/2016')));
-    });
-
-    it('should default dischargeDate to now', function () {
-        let v = new visit();
-        should.not.exist(v.dischargeDate);
-        v.setDischargeDate();
-        let now = date.toFullString(new Date()).substring(0, 8);
-        v.dischargeDate.should.containEql(now);
     });
 
     it('should pv1 to a hl7 segment', function () {
