@@ -2,7 +2,7 @@
 var should = require('should');
 
 module.exports = function () {
-    it('should save a message to the messages collection', function (done) {
+    it('should save a message to the message collection', function (done) {
         let self = this;
         let data = {
             mrn: '15',
@@ -10,9 +10,9 @@ module.exports = function () {
             type: 'A01',
             hl7: 'MSH|...'
         };
-        this.driver.models.messages.save(data, function (error) {
+        this.driver.models.message.save(data, function (error) {
             should.not.exist(error);
-            self.driver.models.messages.find({ mrn: '15', account: '16' }, function (messageHistoryError, results) {
+            self.driver.models.message.find({ mrn: '15', account: '16' }, function (messageHistoryError, results) {
                 should.not.exist(messageHistoryError);
                 results.length.should.equal(1);
                 results[0].should.have.property('mrn', '15');
@@ -28,10 +28,10 @@ module.exports = function () {
 
     it('should find one', function (done) {
         let data = { mrn: '1' };
-        var self = this;
-        this.driver.models.patients.save(data, function (saveError) {
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
             should.not.exist(saveError);
-            self.driver.models.patients.findOne({ mrn: '1' }, function (findError, result) {
+            self.driver.models.patient.findOne({ mrn: '1' }, function (findError, result) {
                 should.not.exist(findError);
                 result.should.have.property('mrn', '1');
                 done();
@@ -46,10 +46,10 @@ module.exports = function () {
                 family: 'Ross'
             }
         };
-        var self = this;
-        this.driver.models.patients.save(data, function (saveError) {
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
             should.not.exist(saveError);
-            self.driver.models.patients.findOne({ mrn: '456' }, function (findError, result) {
+            self.driver.models.patient.findOne({ mrn: '456' }, function (findError, result) {
                 if (findError) {
                     return done(findError);
                 }
@@ -65,7 +65,7 @@ module.exports = function () {
                         return done(updateError);
                     }
 
-                    self.driver.models.patients.find({ mrn: '456' }, function (findUpdatedError, updatedResults) {
+                    self.driver.models.patient.find({ mrn: '456' }, function (findUpdatedError, updatedResults) {
                         if (findUpdatedError) {
                             return done(findUpdatedError);
                         }
@@ -82,7 +82,7 @@ module.exports = function () {
     });
 
     it('should validate mrn exists before saving a patient', function (done) {
-        this.driver.models.patients.save({ }, function (saveError) {
+        this.driver.models.patient.save({ }, function (saveError) {
             should.exist(saveError);
             done();
         });
