@@ -87,4 +87,14 @@ module.exports = function () {
             done();
         });
     });
+
+    it('should create and save a patient, and get an id', function (done) {
+        var patient = new this.driver.models.patient();
+        patient.save(function (error) {
+            should.not.exist(error);
+            should.exist(patient.id);
+            should.exist(patient.timestamp);
+            done();
+        });
+    });
 };

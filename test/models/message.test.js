@@ -11,7 +11,7 @@ describe('Message', function () {
         m.should.have.property('type', '');
         m.should.have.property('event', '');
         m.should.have.property('hl7', '');
-        m.should.have.property('timestamp', '');
+        m.should.have.property('timestamp');
     });
 
     it('should initialize an message object with given values', function () {
