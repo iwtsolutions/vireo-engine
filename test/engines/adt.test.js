@@ -15,12 +15,12 @@ describe('ADT', function () {
         let patient = null;
         let visit = null;
         let engine = null;
-        let messageFind = null;
+        let messageFindOne = null;
 
         before(function (done) {
             engine = new ADT();
             engine.once('ready', function () {
-                messageFind = engine.driver.models.message.find;
+                messageFindOne = engine.driver.models.message.findOne;
                 engine.getAvailablePatient(function (error, availablePatient, availableVisit) {
                     should.not.exist(error);
                     patient = availablePatient;
@@ -31,17 +31,17 @@ describe('ADT', function () {
             });
         });
         afterEach(function () {
-            engine.driver.models.message.find = messageFind;
+            engine.driver.models.message.findOne = messageFindOne;
         });
 
         it('should get an emit event with no previous messages', function (done) {
             let events = [ 'A01', 'A04', 'A05', 'A14' ];
-            engine.driver.models.message.find = sinon.spy(function (query, callback) {
-                callback(null, []);
+            engine.driver.models.message.findOne = sinon.spy(function (query, callback) {
+                callback();
             });
             engine.getNextEvent(patient, visit, function (error, event) {
                 should.not.exist(error);
-                engine.driver.models.message.find.calledOnce.should.be.true();
+                engine.driver.models.message.findOne.calledOnce.should.be.true();
                 events.should.containEql(event);
                 done();
             });
@@ -49,27 +49,14 @@ describe('ADT', function () {
 
         it('should get a "regular" event with a previous A01', function (done) {
             let events = [ 'A02', 'A03', 'A07', 'A08', 'A12', 'A15', 'A16', 'A15', 'A20', 'A21', 'A28', 'A31' ];
-            engine.driver.models.message.find = sinon.spy(function (query, callback) {
-                callback(null, [ {
+            engine.driver.models.message.findOne = sinon.spy(function (query, callback) {
+                callback(null, {
                     event: 'A01'
-                } ]);
+                });
             });
             engine.getNextEvent(patient, visit, function (error, event) {
                 should.not.exist(error);
-                engine.driver.models.message.find.calledOnce.should.be.true();
-                events.should.containEql(event);
-                done();
-            });
-        });
-
-        it('should get an emit event with only previous "update" events', function (done) {
-            let events = [ 'A01', 'A04', 'A05', 'A14' ];
-            engine.driver.models.message.find = sinon.spy(function (query, callback) {
-                callback(null, [ { event: 'A08' }, { event: 'A31' } ]);
-            });
-            engine.getNextEvent(patient, visit, function (error, event) {
-                should.not.exist(error);
-                engine.driver.models.message.find.calledOnce.should.be.true();
+                engine.driver.models.message.findOne.calledOnce.should.be.true();
                 events.should.containEql(event);
                 done();
             });

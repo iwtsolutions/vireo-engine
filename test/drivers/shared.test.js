@@ -297,4 +297,67 @@ module.exports = function () {
             done();
         });
     });
+
+    it('should find rows where sex is not in [ "m", "f" ] and phone equals 111-111-1111', function (done) {
+        let query = { sex: { nin: [ 'm', 'f' ] }, phone: '111-111-1111' };
+        this.driver.models.patient.find(query, function (error, patients) {
+            should.not.exist(error);
+
+            patients.length.should.be.above(0);
+            patients.forEach(function (pt) {
+                pt.sex.should.equal('u');
+                pt.phone.should.equal('111-111-1111');
+            });
+
+            done();
+        });
+    });
+
+    it('should find first row where sex is not in [ "m", "f" ] and phone equals 111-111-1111', function (done) {
+        let query = { sex: { nin: [ 'm', 'f' ] }, phone: '111-111-1111' };
+        this.driver.models.patient.findOne(query, function (error, patient) {
+            should.not.exist(error);
+            patient.sex.should.equal('u');
+            patient.phone.should.equal('111-111-1111');
+
+            done();
+        });
+    });
+
+    it('should find one row where sex is in [ "m", "f" ] and phone equals 111-111-1111', function (done) {
+        let query = { sex: { in: [ 'm', 'f' ] }, phone: '111-111-1111' };
+        this.driver.models.patient.findOne(query, function (error, patient) {
+            should.not.exist(error);
+            [ 'm', 'f' ].should.containEql(patient.sex);
+            patient.phone.should.equal('111-111-1111');
+
+            done();
+        });
+    });
+
+    it('should find most recent row where phone equals 333-333-3333', function (done) {
+        let self = this;
+        let firstPatient = new self.driver.models.patient({ mrn: '333', phone: '333-333-3333' });
+
+        firstPatient.save(function (saveError) {
+            should.not.exist(saveError);
+            self.driver.models.patient.findOne({ phone: '333-333-3333' }, function (error, patient) {
+                should.not.exist(error);
+                patient.phone.should.equal('333-333-3333');
+                patient.mrn.should.equal('333');
+
+                let nextPatient = new self.driver.models.patient({ mrn: '444', phone: '333-333-3333'  });
+                nextPatient.save(function (saveError2) {
+                    should.not.exist(saveError2);
+
+                    self.driver.models.patient.findOne({ phone: '333-333-3333' }, function (error2, patient2) {
+                        should.not.exist(error2);
+                        patient2.phone.should.equal('333-333-3333');
+                        patient2.mrn.should.equal('444');
+                        done();
+                    });
+                });
+            });
+        });
+    });
 };

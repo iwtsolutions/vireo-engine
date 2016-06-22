@@ -1,5 +1,5 @@
 'use strict';
-require('should');
+var should = require('should');
 var _      = require('underscore');
 var random = require('../../lib/helpers/random');
 
@@ -47,14 +47,24 @@ describe('Random', function () {
         }
     });
 
-    it('should get a random value from an array', function () {
+    it('should get a random value from an large array', function () {
         let arr = 'abcdefghijklmnopqrstuvwxyz123456789'.split('');
-        random.selectRandom(arr).should.not.equal(random.selectRandom(arr));
-
-        let arr2 = [ 'a', 'b' ];
-        for (var i = 0; i < 10; i++) {
-            random.selectRandom(arr2).should.not.equal(random.selectRandom(arr));
+        for (let i = 0; i < 3; i++) {
+            if (random.selectRandom(arr) !== random.selectRandom(arr)) {
+                return;
+            }
         }
+        should.fail('No unique combinations were found');
+    });
+
+    it('should get a random value from a small array', function () {
+        let arr = [ 'a', 'b' ];
+        for (let i = 0; i < 10; i++) {
+            if (random.selectRandom(arr) !== random.selectRandom(arr)) {
+                return;
+            }
+        }
+        should.fail('No unique combinations were found');
     });
 
     it('should get a random value from an object', function () {
