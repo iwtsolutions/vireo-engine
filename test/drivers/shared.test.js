@@ -13,8 +13,7 @@ module.exports = function () {
             }
             let pt = new self.driver.models.patient({
                 mrn: prefix + index,
-                phone: prefix === 'main' ? '111-111-1111'  : '222-222-2222',
-                dischargeDate: index % 2 === 0 ? new Date() : null
+                phone: prefix === 'main' ? '111-111-1111'  : '222-222-2222'
             });
             pt.save(function (error) {
                 if (error) {
@@ -24,6 +23,30 @@ module.exports = function () {
             });
         }
         createSamplePatient(0, 'main');
+    });
+
+    before(function (done) {
+        let self = this;
+        function createSampleVisit(index, prefix) {
+            if (index === 10) {
+                if (prefix === 'main') {
+                    return createSampleVisit(0, 'secondary');
+                }
+                return done();
+            }
+            let visit = new self.driver.models.visit({
+                account: prefix + index,
+                patientId: '123',
+                dischargeDate: index % 2 === 0 ? new Date() : null
+            });
+            visit.save(function (error) {
+                if (error) {
+                    return done(error);
+                }
+                createSampleVisit(index + 1, prefix);
+            });
+        }
+        createSampleVisit(0, 'main');
     });
 
     it('should save a message to the message collection', function (done) {
@@ -224,18 +247,35 @@ module.exports = function () {
         findTwoRandomValues(0);
     });
 
+    it('should find a random record without a discharge date', function (done) {
+        let self = this;
+        let query = { dischargeDate: { exists: false } };
+
+        function testRandom(index) {
+            if (index === 10) {
+                return done();
+            }
+            self.driver.models.visit.findRandom(query, function (error, visit) {
+                should.not.exist(error);
+                should.not.exist(visit.dischargeDate);
+                testRandom(index + 1);
+            });
+        }
+        testRandom(0);
+    });
+
     it('should find rows with no dischargeDate', function (done) {
         let self = this;
-        this.driver.models.patient.find({ dischargeDate: null }, function (error, patients) {
+        this.driver.models.visit.find({ dischargeDate: null }, function (error, visits) {
             should.not.exist(error);
-            patients.forEach(function (pt) {
-                pt.should.not.have.property('dischargeDate');
+            visits.forEach(function (pt) {
+                should.not.exist(pt.dischargeDate);
             });
 
-            self.driver.models.patient.find({ dischargeDate: { exists: false } }, function (error2, patients2) {
+            self.driver.models.visit.find({ dischargeDate: { exists: false } }, function (error2, visits2) {
                 should.not.exist(error2);
-                patients2.forEach(function (pt) {
-                    pt.should.not.have.property('dischargeDate');
+                visits2.forEach(function (pt) {
+                    should.not.exist(pt.dischargeDate);
                 });
                 done();
             });
@@ -243,10 +283,10 @@ module.exports = function () {
     });
 
     it('should find rows where dischargeDate exists', function (done) {
-        this.driver.models.patient.find({ dischargeDate: { exists: true } }, function (error, patients) {
+        this.driver.models.visit.find({ dischargeDate: { exists: true } }, function (error, patients) {
             should.not.exist(error);
             patients.forEach(function (pt) {
-                pt.should.not.have.property('dischargeDate');
+                pt.should.have.property('dischargeDate');
             });
 
             done();
@@ -257,7 +297,8 @@ module.exports = function () {
         this.driver.models.patient.find({ phone: { ne: '111-111-1111' } }, function (error, patients) {
             should.not.exist(error);
             patients.forEach(function (pt) {
-                pt.should.have.property('phone', '222-222-2222');
+                pt.should.have.property('phone');
+                pt.phone.should.not.equal('111-111-1111');
             });
 
             done();
