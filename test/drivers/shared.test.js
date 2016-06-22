@@ -2,6 +2,28 @@
 var should = require('should');
 
 module.exports = function () {
+    before(function (done) {
+        let self = this;
+        function createSamplePatient(index, prefix) {
+            if (index === 10) {
+                if (prefix === 'main') {
+                    return createSamplePatient(0, 'secondary');
+                }
+                return done();
+            }
+            let pt = new self.driver.models.patient({
+                mrn: prefix + index,
+                phone: prefix === 'main' ? '111-111-1111'  : '222-222-2222'
+            });
+            pt.save(function (error) {
+                if (error) {
+                    return done(error);
+                }
+                createSamplePatient(index + 1, prefix);
+            });
+        }
+        createSamplePatient(0, 'main');
+    });
     it('should save a message to the message collection', function (done) {
         let self = this;
         let data = {
@@ -89,7 +111,7 @@ module.exports = function () {
     });
 
     it('should create and save a patient, and get an id', function (done) {
-        var patient = new this.driver.models.patient();
+        let patient = new this.driver.models.patient();
         patient.save(function (error) {
             should.not.exist(error);
             should.exist(patient.id);
@@ -124,5 +146,79 @@ module.exports = function () {
                 done();
             });
         });
+    });
+
+    it('should return a count of all from .count', function (done) {
+        this.driver.models.patient.count(function (error, count) {
+            if (error) {
+                return done(error);
+            }
+            count.should.be.above(19);
+            done();
+        });
+    });
+
+    it('should return a count of filtered from .count', function (done) {
+        this.driver.models.patient.count({ phone: '111-111-1111' }, function (error, count) {
+            if (error) {
+                return done(error);
+            }
+            count.should.equal(10);
+            done();
+        });
+    });
+
+    it('should find filtered random records with findRandom', function (done) {
+        let self = this;
+
+        // 10 values in 'patient' may still return the same results..
+        function findTwoRandomValues(index) {
+            if (index === 3) {
+                return done('random values not found..');
+            }
+            self.driver.models.patient.findRandom({ phone: '111-111-1111' }, function (error, patient) {
+                if (error) {
+                    return done(error);
+                }
+                patient.phone.should.equal('111-111-1111');
+                self.driver.models.patient.findRandom({ phone: '111-111-1111' }, function (error2, patient2) {
+                    if (error2) {
+                        return done(error2);
+                    }
+                    patient2.phone.should.equal('111-111-1111');
+                    if (patient.mrn !== patient2.mrn) {
+                        return done();
+                    }
+                    findTwoRandomValues(index + 1);
+                });
+            });
+        }
+        findTwoRandomValues(0);
+    });
+
+    it('should find non-filtered random records with findRandom', function (done) {
+        let self = this;
+
+        // 20 values in 'patient' may still return the same results..
+        function findTwoRandomValues(index) {
+            if (index === 5) {
+                return done('random values not found..');
+            }
+            self.driver.models.patient.findRandom(function (error, patient) {
+                if (error) {
+                    return done(error);
+                }
+                self.driver.models.patient.findRandom(function (error2, patient2) {
+                    if (error2) {
+                        return done(error2);
+                    }
+                    if (patient.mrn !== patient2.mrn && patient.phone !== patient2.phone) {
+                        return done();
+                    }
+                    findTwoRandomValues(index + 1);
+                });
+            });
+        }
+        findTwoRandomValues(0);
     });
 };
