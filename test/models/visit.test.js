@@ -175,4 +175,47 @@ describe('visit', function () {
         v.previousLocation.room.should.equal(oldLocation.room);
         v.previousLocation.bed.should.equal(oldLocation.bed);
     });
+
+    it('should set a random location with setRandomLocation', function () {
+        let v = new visit({
+            location: {
+                nurse: 'NUR11',
+                room: '1244',
+                bed: '5'
+            }
+        });
+        v.setRandomLocation();
+        v.location.nurse.should.not.equal('NUR11');
+        v.location.nurse.length.should.be.above(0);
+        v.location.room.should.not.equal('1244');
+        v.location.room.length.should.be.above(0);
+        v.location.bed.should.not.equal('5');
+        v.location.bed.length.should.be.above(0);
+
+        v.previousLocation.nurse.should.equal('NUR11');
+        v.previousLocation.room.should.equal('1244');
+        v.previousLocation.bed.should.equal('5');
+    });
+
+    it('should clear the location with clearLocation', function () {
+        let v = new visit({
+            location: {
+                nurse: 'NUR11',
+                room: '12',
+                bed: '5'
+            }
+        });
+
+        v.location.nurse.should.equal('NUR11');
+        v.location.room.should.equal('12');
+        v.location.bed.should.equal('5');
+        v.clearLocation();
+
+        v.location.nurse.should.equal('');
+        v.location.room.should.equal('');
+        v.location.bed.should.equal('');
+        v.previousLocation.nurse.should.equal('');
+        v.previousLocation.nurse.should.equal('');
+        v.previousLocation.nurse.should.equal('');
+    });
 });
