@@ -13,7 +13,8 @@ module.exports = function () {
             }
             let pt = new self.driver.models.patient({
                 mrn: prefix + index,
-                phone: prefix === 'main' ? '111-111-1111'  : '222-222-2222'
+                phone: prefix === 'main' ? '111-111-1111'  : '222-222-2222',
+                dischargeDate: index % 2 === 0 ? new Date() : null
             });
             pt.save(function (error) {
                 if (error) {
@@ -24,6 +25,7 @@ module.exports = function () {
         }
         createSamplePatient(0, 'main');
     });
+
     it('should save a message to the message collection', function (done) {
         let self = this;
         let data = {
@@ -220,5 +222,79 @@ module.exports = function () {
             });
         }
         findTwoRandomValues(0);
+    });
+
+    it('should find rows with no dischargeDate', function (done) {
+        let self = this;
+        this.driver.models.patient.find({ dischargeDate: null }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                pt.should.not.have.property('dischargeDate');
+            });
+
+            self.driver.models.patient.find({ dischargeDate: { exists: false } }, function (error2, patients2) {
+                should.not.exist(error2);
+                patients2.forEach(function (pt) {
+                    pt.should.not.have.property('dischargeDate');
+                });
+                done();
+            });
+        });
+    });
+
+    it('should find rows where dischargeDate exists', function (done) {
+        this.driver.models.patient.find({ dischargeDate: { exists: true } }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                pt.should.not.have.property('dischargeDate');
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where phone does not equal 111-111-1111', function (done) {
+        this.driver.models.patient.find({ phone: { ne: '111-111-1111' } }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                pt.should.have.property('phone', '222-222-2222');
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where phone does not equal 111-111-1111 and mrn equals "secondary0"', function (done) {
+        var query = { phone: { ne: '111-111-1111' }, mrn: 'secondary0' };
+        this.driver.models.patient.find(query, function (error, patients) {
+            should.not.exist(error);
+            patients.length.should.equal(1);
+            patients[0].mrn.should.equal('secondary0');
+            patients[0].phone.should.equal('222-222-2222');
+            done();
+        });
+    });
+
+    it('should find rows where sex is in [ "m", "f" ]', function (done) {
+        this.driver.models.patient.find({ sex: { in: [ 'm', 'f' ] } }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                [ 'm', 'f' ].should.containEql(pt.sex);
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where sex is not in [ "m", "f" ]', function (done) {
+        this.driver.models.patient.find({ sex: { nin: [ 'm', 'f' ] } }, function (error, patients) {
+            should.not.exist(error);
+
+            patients.forEach(function (pt) {
+                pt.sex.should.equal('u');
+            });
+
+            done();
+        });
     });
 };
