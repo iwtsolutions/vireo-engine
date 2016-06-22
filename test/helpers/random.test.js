@@ -50,6 +50,11 @@ describe('Random', function () {
     it('should get a random value from an array', function () {
         let arr = 'abcdefghijklmnopqrstuvwxyz123456789'.split('');
         random.selectRandom(arr).should.not.equal(random.selectRandom(arr));
+
+        let arr2 = [ 'a', 'b' ];
+        for (var i = 0; i < 10; i++) {
+            random.selectRandom(arr2).should.not.equal(random.selectRandom(arr));
+        }
     });
 
     it('should get a random value from an object', function () {
