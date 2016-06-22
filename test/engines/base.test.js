@@ -121,4 +121,40 @@ describe('BaseEngine', function () {
             });
         });
     });
+
+    it('should throw an error if maximumActivePatients is less than 1', function () {
+        (() =>
+            new SampleEngine({ maximumActivePatients: 0 })
+        ).should.throw();
+    });
+
+    it('should only add 1 patient if maximumActivePatients equals 1', function () {
+        var engine = new SampleEngine({ maximumActivePatients: 1 });
+        engine.once('ready', function () {
+            engine.getAvailablePatient(false, function (error, patient, visit) {
+                should.not.exist(error);
+                engine.getAvailablePatient(false, function (error2, patient2, visit2) {
+                    should.not.exist(error2);
+
+                    patient.id.should.equal(patient2.id);
+                    visit.id.should.equal(visit2.id);
+                });
+            });
+        });
+    });
+
+    it('should add 2 different patients if maximumActivePatients is greater than 1', function () {
+        var engine = new SampleEngine({ maximumActivePatients: 2 });
+        engine.once('ready', function () {
+            engine.getAvailablePatient(false, function (error, patient, visit) {
+                should.not.exist(error);
+                engine.getAvailablePatient(false, function (error2, patient2, visit2) {
+                    should.not.exist(error2);
+
+                    patient.id.should.not.equal(patient2.id);
+                    visit.id.should.not.equal(visit2.id);
+                });
+            });
+        });
+    });
 });
