@@ -2,7 +2,54 @@
 var should = require('should');
 
 module.exports = function () {
-    it('should save a message to the messages collection', function (done) {
+    before(function (done) {
+        let self = this;
+        function createSamplePatient(index, prefix) {
+            if (index === 10) {
+                if (prefix === 'main') {
+                    return createSamplePatient(0, 'secondary');
+                }
+                return done();
+            }
+            let pt = new self.driver.models.patient({
+                mrn: prefix + index,
+                phone: prefix === 'main' ? '111-111-1111'  : '222-222-2222'
+            });
+            pt.save(function (error) {
+                if (error) {
+                    return done(error);
+                }
+                createSamplePatient(index + 1, prefix);
+            });
+        }
+        createSamplePatient(0, 'main');
+    });
+
+    before(function (done) {
+        let self = this;
+        function createSampleVisit(index, prefix) {
+            if (index === 10) {
+                if (prefix === 'main') {
+                    return createSampleVisit(0, 'secondary');
+                }
+                return done();
+            }
+            let visit = new self.driver.models.visit({
+                account: prefix + index,
+                patientId: '123',
+                dischargeDate: index % 2 === 0 ? new Date() : null
+            });
+            visit.save(function (error) {
+                if (error) {
+                    return done(error);
+                }
+                createSampleVisit(index + 1, prefix);
+            });
+        }
+        createSampleVisit(0, 'main');
+    });
+
+    it('should save a message to the message collection', function (done) {
         let self = this;
         let data = {
             mrn: '15',
@@ -10,9 +57,9 @@ module.exports = function () {
             type: 'A01',
             hl7: 'MSH|...'
         };
-        this.driver.models.messages.save(data, function (error) {
+        this.driver.models.message.save(data, function (error) {
             should.not.exist(error);
-            self.driver.models.messages.find({ mrn: '15', account: '16' }, function (messageHistoryError, results) {
+            self.driver.models.message.find({ mrn: '15', account: '16' }, function (messageHistoryError, results) {
                 should.not.exist(messageHistoryError);
                 results.length.should.equal(1);
                 results[0].should.have.property('mrn', '15');
@@ -28,10 +75,10 @@ module.exports = function () {
 
     it('should find one', function (done) {
         let data = { mrn: '1' };
-        var self = this;
-        this.driver.models.patients.save(data, function (saveError) {
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
             should.not.exist(saveError);
-            self.driver.models.patients.findOne({ mrn: '1' }, function (findError, result) {
+            self.driver.models.patient.findOne({ mrn: '1' }, function (findError, result) {
                 should.not.exist(findError);
                 result.should.have.property('mrn', '1');
                 done();
@@ -46,10 +93,10 @@ module.exports = function () {
                 family: 'Ross'
             }
         };
-        var self = this;
-        this.driver.models.patients.save(data, function (saveError) {
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
             should.not.exist(saveError);
-            self.driver.models.patients.findOne({ mrn: '456' }, function (findError, result) {
+            self.driver.models.patient.findOne({ mrn: '456' }, function (findError, result) {
                 if (findError) {
                     return done(findError);
                 }
@@ -65,7 +112,7 @@ module.exports = function () {
                         return done(updateError);
                     }
 
-                    self.driver.models.patients.find({ mrn: '456' }, function (findUpdatedError, updatedResults) {
+                    self.driver.models.patient.find({ mrn: '456' }, function (findUpdatedError, updatedResults) {
                         if (findUpdatedError) {
                             return done(findUpdatedError);
                         }
@@ -82,9 +129,326 @@ module.exports = function () {
     });
 
     it('should validate mrn exists before saving a patient', function (done) {
-        this.driver.models.patients.save({ }, function (saveError) {
+        this.driver.models.patient.save({ }, function (saveError) {
             should.exist(saveError);
             done();
+        });
+    });
+
+    it('should create and save a patient, and get an id', function (done) {
+        let patient = new this.driver.models.patient();
+        patient.save(function (error) {
+            should.not.exist(error);
+            should.exist(patient.id);
+            should.exist(patient.timestamp);
+            done();
+        });
+    });
+
+    it('should return models instead of anonymous objects with find', function (done) {
+        let data = { mrn: '1' };
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
+            should.not.exist(saveError);
+            self.driver.models.patient.find({ mrn: '1' }, function (findError, results) {
+                should.not.exist(findError);
+                results.forEach(function (r) {
+                    r.should.be.instanceof(self.driver.models.patient);
+                });
+                done();
+            });
+        });
+    });
+
+    it('should return models instead of anonymous objects with findOne', function (done) {
+        let data = { mrn: '1' };
+        let self = this;
+        this.driver.models.patient.save(data, function (saveError) {
+            should.not.exist(saveError);
+            self.driver.models.patient.findOne({ mrn: '1' }, function (findError, result) {
+                should.not.exist(findError);
+                result.should.be.instanceof(self.driver.models.patient);
+                done();
+            });
+        });
+    });
+
+    it('should return a count of all from .count', function (done) {
+        this.driver.models.patient.count(function (error, count) {
+            if (error) {
+                return done(error);
+            }
+            count.should.be.above(19);
+            done();
+        });
+    });
+
+    it('should return a count of filtered from .count', function (done) {
+        this.driver.models.patient.count({ phone: '111-111-1111' }, function (error, count) {
+            if (error) {
+                return done(error);
+            }
+            count.should.equal(10);
+            done();
+        });
+    });
+
+    it('should find filtered random records with findRandom', function (done) {
+        let self = this;
+
+        // 10 values in 'patient' may still return the same results..
+        function findTwoRandomValues(index) {
+            if (index === 3) {
+                return done('random values not found..');
+            }
+            self.driver.models.patient.findRandom({ phone: '111-111-1111' }, function (error, patient) {
+                if (error) {
+                    return done(error);
+                }
+                patient.phone.should.equal('111-111-1111');
+                self.driver.models.patient.findRandom({ phone: '111-111-1111' }, function (error2, patient2) {
+                    if (error2) {
+                        return done(error2);
+                    }
+                    patient2.phone.should.equal('111-111-1111');
+                    if (patient.mrn !== patient2.mrn) {
+                        return done();
+                    }
+                    findTwoRandomValues(index + 1);
+                });
+            });
+        }
+        findTwoRandomValues(0);
+    });
+
+    it('should find non-filtered random records with findRandom', function (done) {
+        let self = this;
+
+        // 20 values in 'patient' may still return the same results..
+        function findTwoRandomValues(index) {
+            if (index === 5) {
+                return done('random values not found..');
+            }
+            self.driver.models.patient.findRandom(function (error, patient) {
+                if (error) {
+                    return done(error);
+                }
+                self.driver.models.patient.findRandom(function (error2, patient2) {
+                    if (error2) {
+                        return done(error2);
+                    }
+                    if (patient.mrn !== patient2.mrn && patient.phone !== patient2.phone) {
+                        return done();
+                    }
+                    findTwoRandomValues(index + 1);
+                });
+            });
+        }
+        findTwoRandomValues(0);
+    });
+
+    it('should find a random record without a discharge date', function (done) {
+        let self = this;
+        let query = { dischargeDate: { exists: false } };
+
+        function testRandom(index) {
+            if (index === 10) {
+                return done();
+            }
+            self.driver.models.visit.findRandom(query, function (error, visit) {
+                should.not.exist(error);
+                should.not.exist(visit.dischargeDate);
+                testRandom(index + 1);
+            });
+        }
+        testRandom(0);
+    });
+
+    it('should find rows with no dischargeDate', function (done) {
+        let self = this;
+        this.driver.models.visit.find({ dischargeDate: null }, function (error, visits) {
+            should.not.exist(error);
+            visits.forEach(function (pt) {
+                should.not.exist(pt.dischargeDate);
+            });
+
+            self.driver.models.visit.find({ dischargeDate: { exists: false } }, function (error2, visits2) {
+                should.not.exist(error2);
+                visits2.forEach(function (pt) {
+                    should.not.exist(pt.dischargeDate);
+                });
+                done();
+            });
+        });
+    });
+
+    it('should find rows where dischargeDate exists', function (done) {
+        this.driver.models.visit.find({ dischargeDate: { exists: true } }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                pt.should.have.property('dischargeDate');
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where phone does not equal 111-111-1111', function (done) {
+        this.driver.models.patient.find({ phone: { ne: '111-111-1111' } }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                pt.should.have.property('phone');
+                pt.phone.should.not.equal('111-111-1111');
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where phone does not equal 111-111-1111 and mrn equals "secondary0"', function (done) {
+        let query = { phone: { ne: '111-111-1111' }, mrn: 'secondary0' };
+        this.driver.models.patient.find(query, function (error, patients) {
+            should.not.exist(error);
+            patients.length.should.equal(1);
+            patients[0].mrn.should.equal('secondary0');
+            patients[0].phone.should.equal('222-222-2222');
+            done();
+        });
+    });
+
+    it('should find rows where sex is in [ "m", "f" ]', function (done) {
+        this.driver.models.patient.find({ sex: { in: [ 'm', 'f' ] } }, function (error, patients) {
+            should.not.exist(error);
+            patients.forEach(function (pt) {
+                [ 'm', 'f' ].should.containEql(pt.sex);
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where sex is not in [ "m", "f" ]', function (done) {
+        this.driver.models.patient.find({ sex: { nin: [ 'm', 'f' ] } }, function (error, patients) {
+            should.not.exist(error);
+
+            patients.forEach(function (pt) {
+                pt.sex.should.equal('u');
+            });
+
+            done();
+        });
+    });
+
+    it('should find rows where sex is not in [ "m", "f" ] and phone equals 111-111-1111', function (done) {
+        let query = { sex: { nin: [ 'm', 'f' ] }, phone: '111-111-1111' };
+        this.driver.models.patient.find(query, function (error, patients) {
+            should.not.exist(error);
+
+            patients.length.should.be.above(0);
+            patients.forEach(function (pt) {
+                pt.sex.should.equal('u');
+                pt.phone.should.equal('111-111-1111');
+            });
+
+            done();
+        });
+    });
+
+    it('should find first row where sex is not in [ "m", "f" ] and phone equals 111-111-1111', function (done) {
+        let query = { sex: { nin: [ 'm', 'f' ] }, phone: '111-111-1111' };
+        this.driver.models.patient.findOne(query, function (error, patient) {
+            should.not.exist(error);
+            patient.sex.should.equal('u');
+            patient.phone.should.equal('111-111-1111');
+
+            done();
+        });
+    });
+
+    it('should find one row where sex is in [ "m", "f" ] and phone equals 111-111-1111', function (done) {
+        let query = { sex: { in: [ 'm', 'f' ] }, phone: '111-111-1111' };
+        this.driver.models.patient.findOne(query, function (error, patient) {
+            should.not.exist(error);
+            [ 'm', 'f' ].should.containEql(patient.sex);
+            patient.phone.should.equal('111-111-1111');
+
+            done();
+        });
+    });
+
+    it('should find most recent row where phone equals 333-333-3333', function (done) {
+        let self = this;
+        let firstPatient = new self.driver.models.patient({ mrn: '333', phone: '333-333-3333' });
+
+        firstPatient.save(function (saveError) {
+            should.not.exist(saveError);
+            self.driver.models.patient.findOne({ phone: '333-333-3333' }, function (error, patient) {
+                should.not.exist(error);
+                patient.phone.should.equal('333-333-3333');
+                patient.mrn.should.equal('333');
+
+                let nextPatient = new self.driver.models.patient({ mrn: '444', phone: '333-333-3333'  });
+                nextPatient.save(function (saveError2) {
+                    should.not.exist(saveError2);
+
+                    self.driver.models.patient.findOne({ phone: '333-333-3333' }, function (error2, patient2) {
+                        should.not.exist(error2);
+                        patient2.phone.should.equal('333-333-3333');
+                        patient2.mrn.should.equal('444');
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
+    describe('child properties', function () {
+        before(function (done) {
+            let self = this;
+            function createVisits(index) {
+                if (index === 5) {
+                    return done();
+                }
+                let visit = new self.driver.models.visit({
+                    patientId: '1',
+                    location: {
+                        nurse: 'AR' + (index % 2 === 0 ? 'A' : 'B'),
+                        room: '10' + index,
+                        bed: 'a'
+                    }
+                });
+
+                visit.save(function (error) {
+                    if (error) {
+                        return done(error);
+                    }
+                    createVisits(index + 1);
+                });
+            }
+            createVisits(0);
+        });
+
+        it('should find visits based on child location.nurse property', function (done) {
+            let query = { location: { nurse: 'ARB' } }; // 0, 2, 4 === A
+            this.driver.models.visit.find(query, function (nurseError, nurseResults) {
+                should.not.exist(nurseError);
+                nurseResults.length.should.equal(2);
+                nurseResults.forEach(function (r) {
+                    r.location.should.have.property('nurse', 'ARB');
+                });
+                done();
+            });
+        });
+
+        it('should find a visit based on child location properties', function (done) {
+            let query = { location: { nurse: 'ARB', room: '101' } }; // 0, 2, 4 === A
+            this.driver.models.visit.find(query, function (nurseError, nurseResults) {
+                should.not.exist(nurseError)    ;
+                nurseResults.length.should.equal(1);
+                nurseResults[0].location.should.have.property('nurse', 'ARB');
+                nurseResults[0].location.should.have.property('room', '101');
+                done();
+            });
         });
     });
 };

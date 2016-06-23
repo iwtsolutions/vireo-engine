@@ -12,8 +12,8 @@ describe('MemoryDriver', function () {
     sharedTests.call(this);
     it('should initialize arrays for collections', function () {
         this.driver.should.have.property('collections');
-        this.driver.collections.should.have.property('patients');
-        this.driver.collections.should.have.property('visits');
-        this.driver.collections.should.have.property('messages');
+        this.driver.collections.should.have.property('patient');
+        this.driver.collections.should.have.property('visit');
+        this.driver.collections.should.have.property('message');
     });
 });

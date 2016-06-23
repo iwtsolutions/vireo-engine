@@ -17,7 +17,7 @@ describe('RethinkDriver', function () {
     });
 
     after(function (done) {
-        var self = this;
+        let self = this;
         r.dbList().run(this.driver.connection, function (error, dbs) {
             should.not.exist(error);
             if (dbs.indexOf(dbName) > -1) {
@@ -32,9 +32,9 @@ describe('RethinkDriver', function () {
         r.tableList().run(this.driver.connection, function (error, tables) {
             should.not.exist(error);
 
-            tables.should.containEql('patients');
-            tables.should.containEql('visits');
-            tables.should.containEql('messages');
+            tables.should.containEql('patient');
+            tables.should.containEql('visit');
+            tables.should.containEql('message');
             done();
         });
     });
