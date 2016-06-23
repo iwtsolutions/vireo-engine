@@ -4,7 +4,7 @@
   "description": "Vireo is an HL7 engine simulator to generate random and configurable data for testing purposes. All data generated is simulated and faked.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "grunt"
   },
   "keywords": [
     "hl7",
