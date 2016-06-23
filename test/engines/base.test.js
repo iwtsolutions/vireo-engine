@@ -157,4 +157,44 @@ describe('BaseEngine', function () {
             });
         });
     });
+
+    describe('consume', function () {
+        it('should send messages when consuming', function (done) {
+            var engine = new SampleEngine({ speed: 'LoadTest' });
+
+            engine.once('ready', function () {
+                var count = 0;
+                engine.on('message', function (message) {
+                    if (message.indexOf('MSH|') === 0) {
+                        count = count + 1;
+                    }
+                    if (count === 2) {
+                        engine.stop();
+                        return done();
+                    }
+                });
+                engine.consume();
+                engine.consuming.should.equal(true);
+            });
+        });
+
+        it('should consuming after calling stop', function (done) {
+            var engine = new SampleEngine({ speed: 'Medium' });
+
+            engine.once('ready', function () {
+                var count = 0;
+                engine.on('message', function (message) {
+                    if (message.indexOf('MSH|') === 0) {
+                        count = count + 1;
+                    }
+                    if (count > 0) {
+                        engine.stop();
+                        engine.consuming.should.equal(false);
+                        return done();
+                    }
+                });
+                engine.consume();
+            });
+        });
+    });
 });
