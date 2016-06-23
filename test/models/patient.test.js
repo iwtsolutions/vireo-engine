@@ -8,9 +8,7 @@ describe('patient', function () {
         let p2 = new patient();
 
         p1.mrn.should.not.equal(p2.mrn);
-        p1.name.family.should.not.equal(p2.name.family);
-        p1.name.given.should.not.equal(p2.name.given);
-        p1.name.middle.should.not.equal(p2.name.middle);
+        p1.name.should.not.containEql(p2.name);
         p1.mothersMaidenName.should.not.equal(p2.mothersMaidenName);
         p1.dob.should.not.equal(p2.dob);
         p1.address.street.should.not.equal(p2.address.street);

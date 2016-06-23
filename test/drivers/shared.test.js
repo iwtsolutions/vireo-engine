@@ -306,7 +306,7 @@ module.exports = function () {
     });
 
     it('should find rows where phone does not equal 111-111-1111 and mrn equals "secondary0"', function (done) {
-        var query = { phone: { ne: '111-111-1111' }, mrn: 'secondary0' };
+        let query = { phone: { ne: '111-111-1111' }, mrn: 'secondary0' };
         this.driver.models.patient.find(query, function (error, patients) {
             should.not.exist(error);
             patients.length.should.equal(1);
@@ -398,6 +398,56 @@ module.exports = function () {
                         done();
                     });
                 });
+            });
+        });
+    });
+
+    describe('child properties', function () {
+        before(function (done) {
+            let self = this;
+            function createVisits(index) {
+                if (index === 5) {
+                    return done();
+                }
+                let visit = new self.driver.models.visit({
+                    patientId: '1',
+                    location: {
+                        nurse: 'AR' + (index % 2 === 0 ? 'A' : 'B'),
+                        room: '10' + index,
+                        bed: 'a'
+                    }
+                });
+
+                visit.save(function (error) {
+                    if (error) {
+                        return done(error);
+                    }
+                    createVisits(index + 1);
+                });
+            }
+            createVisits(0);
+        });
+
+        it('should find visits based on child location.nurse property', function (done) {
+            let query = { location: { nurse: 'ARB' } }; // 0, 2, 4 === A
+            this.driver.models.visit.find(query, function (nurseError, nurseResults) {
+                should.not.exist(nurseError);
+                nurseResults.length.should.equal(2);
+                nurseResults.forEach(function (r) {
+                    r.location.should.have.property('nurse', 'ARB');
+                });
+                done();
+            });
+        });
+
+        it('should find a visit based on child location properties', function (done) {
+            let query = { location: { nurse: 'ARB', room: '101' } }; // 0, 2, 4 === A
+            this.driver.models.visit.find(query, function (nurseError, nurseResults) {
+                should.not.exist(nurseError)    ;
+                nurseResults.length.should.equal(1);
+                nurseResults[0].location.should.have.property('nurse', 'ARB');
+                nurseResults[0].location.should.have.property('room', '101');
+                done();
             });
         });
     });

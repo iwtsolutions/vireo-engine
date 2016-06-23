@@ -158,4 +158,19 @@ describe('ADT', function () {
             });
         });
     });
+
+    it('should get a new location if one already exists', function (done) {
+        let engine = new ADT({ mode: 'Simulated', speed: { min: 0, max: 1 }, newPatientProbability: 1 });
+        engine.once('ready', function () {
+            let visit = new engine.driver.models.visit();
+            visit.save(function (saveError) {
+                should.not.exist(saveError);
+                engine.getNewLocation(visit.location, function (error, location) {
+                    should.not.exist(error);
+                    location.should.not.containEql(visit.location);
+                    done();
+                });
+            });
+        });
+    });
 });
