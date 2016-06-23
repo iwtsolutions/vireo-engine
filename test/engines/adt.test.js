@@ -96,4 +96,66 @@ describe('ADT', function () {
             });
         });
     });
+
+    describe('newPatientProbability', function () {
+        it('should throw if newPatientProbability is not between 1 and 100', function () {
+            (() => new ADT({ newPatientProbability: 101 })).should.throw();
+            (() => new ADT({ newPatientProbability: 'test' })).should.throw();
+        });
+
+        it('should return new patients every time with 100% new patient probability', function (done) {
+            let engine = new ADT({ mode: 'Simulated', speed: { max: 1 }, newPatientProbability: 100 });
+            engine.once('ready', function () {
+                let patient = new engine.driver.models.patient();
+                let visit = new engine.driver.models.visit();
+
+                engine.getAvailablePatient = sinon.spy(function (existing, callback) {
+                    callback(null, patient, visit);
+                });
+
+                let count = 0;
+                engine.on('message', function () {
+                    count++;
+                    if (count === 10) {
+                        engine.stop();
+                        engine.getAvailablePatient.callCount.should.equal(10);
+                        engine.getAvailablePatient.calledWith(false).should.be.true();
+                        engine.getAvailablePatient.calledWith(true).should.be.false();
+                        return done();
+                    }
+                });
+                engine.consume();
+            });
+        });
+
+        it('should return existing patients (almost) every time with 1% new patient probability', function (done) {
+            let engine = new ADT({ mode: 'Simulated', speed: { min: 0, max: 1 }, newPatientProbability: 1 });
+            engine.once('ready', function () {
+                let patient = new engine.driver.models.patient();
+                let visit = new engine.driver.models.visit();
+
+                let newPatientCount = 0;
+                engine.getAvailablePatient = sinon.spy(function (existing, callback) {
+                    if (existing === false) {
+                        newPatientCount++;
+                    }
+                    callback(null, patient, visit);
+                });
+
+                let count = 0;
+                engine.on('message', function () {
+                    count++;
+                    if (count === 20) {
+                        engine.stop();
+                        engine.getAvailablePatient.callCount.should.equal(20);
+                        newPatientCount.should.be.below(2); // should be called once, if that
+
+                        engine.getAvailablePatient.calledWith(true).should.be.true();
+                        return done();
+                    }
+                });
+                engine.consume();
+            });
+        });
+    });
 });
