@@ -13,9 +13,12 @@ Minimum: v6.0.0
 
 ## Tests
 
+[RethinkDB](http://rethinkdb.com/docs/install) must be installed for grunt to successfully run.
+
     grunt           // runs eslint & mochaTest
     grunt lint      // runs eslint only
-    grunt mocha     // runs mocha tests only
+    grunt test      // runs mocha tests only
+
 
 ## Usage
 
